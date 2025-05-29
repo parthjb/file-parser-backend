@@ -1,0 +1,7 @@
+invoice_number,issue_date,due_date,total_amount,vendor_name,email,phone,address,description,quantity,unit_price,total_price,customer_name,customer_email,customer_phone,customer_address,payment_date,amount_paid,payment_method
+INV101,2025-06-01,2025-06-15,1800,NextGen Inc,orders@nextgen.com,9998887777,500 Future Rd,HDMI Cable,12,60,720,Alice Johnson,alice@samplemail.com,1231231234,789 Birch St,2025-06-10,720,PayPal
+INV102,2025-06-02,2025-06-16,2200,SmartTech Ltd,support@smarttech.com,4443332222,22 Silicon Way,Tablet,3,700,2100,Mark Davis,mark.davis@example.com,3213214321,123 Maple Ave,2025-06-12,1500,Debit Card
+INV103,2025-06-03,2025-06-17,950,Digital Hub,hello@digitalhub.com,6665554444,90 Startup Lane,Mouse,8,40,320,Emma Stone,emma.stone@mail.com,4564564567,654 Spruce Blvd,2025-06-14,320,Credit Card
+INV104,2025-06-04,2025-06-18,2750,Alpha Systems,alpha@systems.com,7776665555,101 Circuit Ave,Monitor,5,300,1500,Liam Wong,liam.w@example.com,7897897890,987 Willow Dr,2025-06-15,1500,Bank Transfer
+INV105,2025-06-05,2025-06-19,3600,ByteWorks,contact@byteworks.com,1112223333,23 Code Street,Printer,4,800,3200,Sophia Lee,sophia.lee@example.com,1237894560,321 Aspen Way,2025-06-16,2000,Credit Card
+INV106,2025-06-06,2025-06-20,1200,CloudNet,service@cloudnet.com,8889990000,76 Network Blvd,Webcam,6,100,600,Ethan Kim,ethan.kim@mail.net,6543219870,159 Cedar Ct,2025-06-18,600,Cash
