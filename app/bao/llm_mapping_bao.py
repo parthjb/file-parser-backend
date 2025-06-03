@@ -10,33 +10,33 @@ from app.utils.logger import app_logger
 
 class LLMMappingBAO:
     def __init__(self):
-        genai.configure(api_key="api-key")
+        genai.configure(api_key="api key")
         self.expected_schema = {
-            'invoices': {
+            'invoice': {
                 'invoice_number': String(20),
                 'issue_date': Date,
                 'due_date': Date,
                 'total_amount': DECIMAL
             },
-            'vendors': {
+            'vendor': {
                 'vendor_name': String,
                 'email': String,
                 'phone': String,
                 'address': Text
             },
-            'invoiceitems': {
+            'invoiceitem': {
                 'description': Text,
                 'quantity': Integer,
                 'unit_price': DECIMAL,
                 'total_price': DECIMAL
             },
-            'customers': {
+            'customer': {
                 'customer_name': String,
                 'customer_email': String,
                 'customer_phone': String,
                 'customer_address': Text
             },
-            'payments': {
+            'payment': {
                 'payment_date': Date,
                 'amount_paid': DECIMAL,
                 'payment_method': String
@@ -55,20 +55,19 @@ class LLMMappingBAO:
             Extracted columns: {extracted_columns}
 
             Available database schema:
-            - invoices: {self.expected_schema['invoices']}
-            - vendors: {self.expected_schema['vendors']}
-            - invoiceitems: {self.expected_schema['invoiceitems']}
-            - customers: {self.expected_schema['customers']}
-            - payments: {self.expected_schema['payments']}
+            - invoice: {self.expected_schema['invoice']}
+            - vendor: {self.expected_schema['vendor']}
+            - invoiceitem: {self.expected_schema['invoiceitem']}
+            - customer: {self.expected_schema['customer']}
+            - payment: {self.expected_schema['payment']}
 
             Provide response ONLY in valid JSON format with confidence scores (0.0-1.0):
             {{
                 "mappings": [
                     {{
-                        "source_field": "extracted_column_name",
+                        "source_field": "extracted_column_name (datatype)",
                         "target_table": "table_name",
-                        "target_column": "column_name",
-                        "confidence": 1.0
+                        "target_column": "column_name (datatype)"
                     }}
                 ],
                 "unmapped_fields": ["field1", "field2"]
@@ -77,7 +76,6 @@ class LLMMappingBAO:
             Guidelines:
             - Consider common invoice terminology variations
             - Only return valid JSON, no additional text or explanations
-            - Use confidence scores between 0.0 and 1.0
             """
 
             model = genai.GenerativeModel(model_name="gemini-2.0-flash-exp")
@@ -93,7 +91,7 @@ class LLMMappingBAO:
 
             response_text = response.text.strip() if response.text else ""
             
-            app_logger.info(f"Raw LLM response: {response_text}")
+            # app_logger.info(f"Raw LLM response: {response_text}")
             
             if not response_text:
                 app_logger.warning("Empty response from LLM, using fallback mapping")

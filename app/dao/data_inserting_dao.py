@@ -23,22 +23,12 @@ class LLMMappingProcessor:
         }
     
     def transform_data_by_mappings(self, record: Dict[str, Any], mappings: Dict) -> Dict[str, Dict[str, Any]]:
-        """
-        Transform a single record according to LLM mappings, grouping by target tables.
-        
-        Args:
-            record: Single record from file content
-            mappings: LLM mapping configuration
-            
-        Returns:
-            Dictionary grouped by target tables with mapped data
-        """
         transformed_data = {
-            'vendors': {},
-            'customers': {},
-            'invoices': {},
-            'payments': {},
-            'invoiceitems': {}
+            'vendor': {},
+            'customer': {},
+            'invoice': {},
+            'payment': {},
+            'invoiceitem': {}
         }
         
         try:
@@ -50,11 +40,23 @@ class LLMMappingProcessor:
                 if source_field in record:
                     value = record[source_field]
                     transformed_data[target_table][target_column] = value
+        
+        # Nested Dictionaries
+        # transforming data 
+        # {
+        # 'vendors': {'vendor_name': 'NextGen Inc', 'email': 'orders@nextgen.com', 'phone': 9998887777, 'address': '500 Future Rd'}, 
+        # 'customers': {'customer_name': 'Alice Johnson', 'customer_email': 'alice@samplemail.com', 'customer_phone': 1231231234, 'customer_address': '789 Birch St'}, 
+        # 'invoices': {'invoice_number': 'INV101', 'issue_date': '2025-06-01', 'due_date': '2025-06-15', 'total_amount': 1800}, 
+        # 'payments': {'payment_date': '2025-06-10', 'amount_paid': 720, 'payment_method': 'PayPal'}, 'invoiceitems': {'description': 'HDMI Cable', 'quantity': 12, 'unit_price': 60, 'total_price': 720}
+        # }
+        # (record) 
+        # {'invoice_number': 'INV101', 'issue_date': '2025-06-01', 'due_date': '2025-06-15', 'total_amount': 1800, 'vendor_name': 'NextGen Inc', 'email': 'orders@nextgen.com', 'phone': 9998887777, 
+        #  'address': '500 Future Rd', 'description': 'HDMI Cable', 'quantity': 12, 'unit_price': 60, 'total_price': 720, 'customer_name': 'Alice Johnson', 'customer_email': 'alice@samplemail.com', 
+        #  'customer_phone': 1231231234, 'customer_address': '789 Birch St', 'payment_date': '2025-06-10', 'amount_paid': 720, 'payment_method': 'PayPal'}
                     
         except Exception as e:
             app_logger.error(f"Error transforming record: {e}")
             raise
-            
         return transformed_data
     
     def create_vendor(self, vendor_data: Dict[str, Any]) -> int:
@@ -173,13 +175,13 @@ class LLMMappingProcessor:
         """
         try:
             transformed_data = self.transform_data_by_mappings(record, mappings)
-            vendor_id = self.create_vendor(transformed_data['vendors'])
-            customer_id = self.create_customer(transformed_data['customers'])
-            invoice_id = self.create_invoice(transformed_data['invoices'], vendor_id, customer_id)
-            if transformed_data['invoiceitems']:
-                self.create_invoice_item(transformed_data['invoiceitems'], invoice_id)
-            if transformed_data['payments']:
-                self.create_payment(transformed_data['payments'], invoice_id)
+            vendor_id = self.create_vendor(transformed_data['vendor'])
+            customer_id = self.create_customer(transformed_data['customer'])
+            invoice_id = self.create_invoice(transformed_data['invoice'], vendor_id, customer_id)
+            if transformed_data['invoiceitem']:
+                self.create_invoice_item(transformed_data['invoiceitem'], invoice_id)
+            if transformed_data['payment']:
+                self.create_payment(transformed_data['payment'], invoice_id)
             
             return True
             

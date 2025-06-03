@@ -18,7 +18,6 @@ class FileUploadDAO(BaseDAO[FileUpload]):
     
     def update_processing_status(self, db: Session, file_upload_id: int, status: str, 
                                error_summary: Optional[str] = None) -> Optional[FileUpload]:
-        """Update processing status"""
         try:
             file_upload = self.get_by_id(db, file_upload_id)
             if file_upload:
@@ -31,6 +30,23 @@ class FileUploadDAO(BaseDAO[FileUpload]):
             return file_upload
         except SQLAlchemyError as e:
             app_logger.error(f"Error updating file upload status: {str(e)}")
+            db.rollback()
+            raise
+        
+    def add_unmapped_columns(self, db: Session, file_upload_id: int, unmapped_columns: dict) -> Optional[FileUpload]:
+        try:
+            file_upload = self.get_by_id(db, file_upload_id)
+            if file_upload:
+                file_upload.unmapped_columns = unmapped_columns
+                db.commit()
+                db.refresh(file_upload)
+                app_logger.info(f"Added unmapped columns for file_upload_id {file_upload_id}")
+                return file_upload
+            else:
+                app_logger.warning(f"No FileUpload found for ID {file_upload_id}")
+                return None
+        except SQLAlchemyError as e:
+            app_logger.error(f"Error adding unmapped columns for file_upload_id {file_upload_id}: {str(e)}")
             db.rollback()
             raise
     
@@ -52,4 +68,5 @@ class ProcessingLogDAO(BaseDAO[ProcessingLog]):
         except SQLAlchemyError as e:
             app_logger.error(f"Error creating processing log: {str(e)}")
             raise
+    
     
