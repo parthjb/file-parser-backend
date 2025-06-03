@@ -1,6 +1,6 @@
 import os
 import aiofiles
-from typing import  Dict, Any
+from typing import  Dict, Any, List
 import PyPDF2
 import pandas as pd
 from docx import Document
@@ -60,5 +60,35 @@ class FileProcessor:
         except Exception as e:
             app_logger.error(f"Error extracting data from CSV {file_path}: {str(e)}")
             raise
+    
+    def extract_columns_from_text(self, text: str) -> List[str]:
+        """Extract potential column names from text using simple heuristics"""
+        try:
+            # Simple approach - look for common invoice patterns
+            potential_columns = []
+            lines = text.split('\n')
+            
+            # Common invoice field patterns
+            patterns = [
+                'invoice', 'date', 'amount', 'total', 'subtotal', 'tax',
+                'vendor', 'supplier', 'customer', 'quantity', 'price',
+                'description', 'item', 'due', 'payment', 'terms'
+            ]
+            
+            for line in lines:
+                line_lower = line.lower().strip()
+                for pattern in patterns:
+                    if pattern in line_lower and len(line.strip()) < 50:
+                        potential_columns.append(line.strip())
+            
+            # Remove duplicates and return
+            unique_columns = list(set(potential_columns))
+            app_logger.info(f"Extracted {len(unique_columns)} potential columns from text")
+            return unique_columns
+        except Exception as e:
+            app_logger.error(f"Error extracting columns from text: {str(e)}")
+            raise
+    
+    
     
    

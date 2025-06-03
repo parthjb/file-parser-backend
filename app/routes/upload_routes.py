@@ -6,17 +6,15 @@ from app.database.connection import get_db
 from app.dao.file_upload_dao import FileUploadDAO
 from app.bao.file_processing_bao import FileProcessingBAO
 from app.utils.file_utils import FileProcessor
-from app.schemas.file_schemas import FileUploadResponse, ProcessingStatus
+from app.schemas.file_schemas import FullMappingSchema, DataInsertResponse
+from app.schemas.mapping_schemas import MappingRequest
 from app.config import settings
 from app.utils.logger import app_logger
 
 router = APIRouter(prefix="/upload", tags=["File Upload"])
 
-@router.post("/", response_model=FileUploadResponse)
-async def upload_file(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
+@router.post("/", response_model=FullMappingSchema)
+async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
     try:
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
@@ -67,3 +65,19 @@ async def upload_file(
         app_logger.error(f"Error uploading file: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+
+@router.post("/{file_upload_id}/confirm-mappings", response_model=DataInsertResponse)
+async def confirm_mappings(
+    file_upload_id: int,
+    mapping_request: MappingRequest
+):
+    try:
+        processing_bao = FileProcessingBAO()  
+        result = await processing_bao.confirm_user_mappings(
+            file_upload_id=file_upload_id,
+            confirmed_mappings=mapping_request.mappings
+        )
+        return result
+    except Exception as e:
+        app_logger.error(f"Error confirming mappings: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")

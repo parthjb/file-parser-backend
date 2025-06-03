@@ -4,10 +4,10 @@ import os
 
 class Settings(BaseSettings):
     
-    DATABASE_URL: str = "postgresql://postgres:parth@localhost:5432/file_parser"
+    DATABASE_URL: str = "postgresql://postgres:parth@localhost:5432/file_to_db_mapper"
     
-    OPENAI_API_KEY: str = "api-key"
-    GENAI_API_KEY: str = "api-key"
+    OPENAI_API_KEY: str = "api key"
+    GENAI_API_KEY: str = "api key"
     
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  
