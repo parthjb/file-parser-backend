@@ -212,7 +212,7 @@ class LLMMappingProcessor:
         ).first()
         
         if file_upload:
-            file_upload.processing_status = 'processing'
+            file_upload.processing_status = 'Processing'
             file_upload.processing_started_at = datetime.now()
             file_upload.total_records_found = len(file_content)
         
@@ -236,7 +236,7 @@ class LLMMappingProcessor:
                     self.db_session.rollback()
             
             if file_upload:
-                file_upload.processing_status = 'completed'
+                file_upload.processing_status = 'Completed'
                 file_upload.processing_completed_at = datetime.now()
                 file_upload.successful_records = self.processing_stats['successful_records']
                 file_upload.failed_records = self.processing_stats['failed_records']
@@ -253,7 +253,7 @@ class LLMMappingProcessor:
             self.db_session.rollback()
             
             if file_upload:
-                file_upload.processing_status = 'failed'
+                file_upload.processing_status = 'Failed'
                 file_upload.error_summary = str(e)
                 self.db_session.commit()
             

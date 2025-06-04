@@ -6,3 +6,10 @@ file_parser/Lib/
 venv/
 .env/
 
+*.log
+
+uploads/*.csv
+
+*.sql
+
+*.exe

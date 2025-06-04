@@ -54,8 +54,11 @@ class FileProcessingBAO:
                 if not file_upload:
                     raise ValueError(f"File upload {file_upload_id} not found")
                                 
-                self.file_upload_dao.update_processing_status(db, file_upload_id, "processing")                 
+                self.file_upload_dao.update_processing_status(db, file_upload_id, "Processing")                 
                 self.processing_log_dao.create_log(db, file_upload_id, "INFO", "Started file processing")
+                
+                # if file_upload.file_type == "pdf":
+                #     llm_result = await self.llm_mapping_bao.fetch_and_map_columns_with_llm(file_content)
                                 
                 extracted_context = await self._extract_columns(file_upload)
 
@@ -84,7 +87,7 @@ class FileProcessingBAO:
         except Exception as e:
             app_logger.error(f"Error processing file {file_upload_id}: {str(e)}")
             with get_db_session() as db:
-                self.file_upload_dao.update_processing_status(db, file_upload_id, "failed", str(e))
+                self.file_upload_dao.update_processing_status(db, file_upload_id, "Failed", str(e))
                 self.processing_log_dao.create_log(db, file_upload_id, "ERROR", f"Processing failed: {str(e)}")
             raise
 

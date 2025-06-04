@@ -49,7 +49,7 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
             'file_path': file_path,
             'file_size': len(content),
             'file_type': file_extension,
-            'processing_status': 'pending'
+            'processing_status': 'Pending'
         }
         
         file_upload = file_upload_dao.create(db, upload_data)
