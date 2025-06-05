@@ -46,7 +46,6 @@ async def get_processing_summary(file_upload_id: int, db: Session = Depends(get_
     try:
         data_dao = DataRetrivalDAO()
         summary = await data_dao.get_all_data_by_file_id(db, file_upload_id)
-        print(summary)
         return summary
     except Exception as e:
         app_logger.error(f"Error getting processing summary: {str(e)}")

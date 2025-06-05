@@ -10,8 +10,8 @@ from app.utils.logger import app_logger
 
 class LLMMappingBAO:
     def __init__(self):
-        # api_key = settings.GENAI_API_KEY
-        genai.configure(api_key="AIzaSyAGNm4sVS1S1qboJU1wutG18cvLliru8kQ")
+        genai_key = settings.GENAI_API_KEY
+        genai.configure(api_key=genai_key)
         self.expected_schema = {
             'invoice': {
                 'invoice_number': String(20),

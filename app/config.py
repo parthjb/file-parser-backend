@@ -4,12 +4,9 @@ import os
 
 class Settings(BaseSettings):
     
-    # DATABASE_URL: str = "postgresql://postgres:parth@localhost:5432/file_parser"
-    DATABASE_URL: str = "postgresql://postgres:AtzxOqzpXcTrdaDlCXAOTBuqfbafSwlE@shuttle.proxy.rlwy.net:20557/railway"
-    
-    OPENAI_API_KEY: str = "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"
-    
-    GENAI_API_KEY: str = "AIzaSyAGNm4sVS1S1qboJU1wutG18cvLliru8kQ"
+    DATABASE_URL: str
+    OPENAI_API_KEY: str
+    GENAI_API_KEY: str
     
     UPLOAD_DIR: str = "uploads"
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  
