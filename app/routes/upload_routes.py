@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, Form
-import magic
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from app.database.connection import get_db
