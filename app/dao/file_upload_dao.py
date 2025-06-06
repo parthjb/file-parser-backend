@@ -50,6 +50,14 @@ class FileUploadDAO(BaseDAO[FileUpload]):
             db.rollback()
             raise
     
+    def get_all_with_stats(self, db: Session, skip: int = 0, limit: int = 100) -> List[FileUpload]:
+        """Get all file uploads with processing stats"""
+        try:
+            return db.query(FileUpload).offset(skip).limit(limit).all()
+        except SQLAlchemyError as e:
+            app_logger.error(f"Error getting file uploads with stats: {str(e)}")
+            raise
+    
 
 class ProcessingLogDAO(BaseDAO[ProcessingLog]):
     def __init__(self):

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, Form
 import magic
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from app.database.connection import get_db
 from app.dao.file_upload_dao import FileUploadDAO
 from app.bao.file_processing_bao import FileProcessingBAO
@@ -13,8 +13,9 @@ from app.utils.logger import app_logger
 
 router = APIRouter(prefix="/upload", tags=["File Upload"])
 
+
 @router.post("/", response_model=FullMappingSchema)
-async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_file(file: UploadFile = File(...), storageLocation: Optional[str] = Form(None),db: Session = Depends(get_db)):
     try:
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
@@ -40,16 +41,19 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
             raise HTTPException(status_code=400, detail="File too large")
         
         file_processor = FileProcessor()
-        file_path = await file_processor.save_file(content, file.filename)
-        
-        
+        if storageLocation == 'local':
+            file_path = await file_processor.save_file(content, file.filename)
+        else:
+            file_path = await file_processor.save_file_to_cloud(content, file.filename)
+
         file_upload_dao = FileUploadDAO()
         upload_data = {
             'original_filename': file.filename,
             'file_path': file_path,
             'file_size': len(content),
             'file_type': file_extension,
-            'processing_status': 'pending'
+            'storage_location': storageLocation,
+            'processing_status': 'Pending'
         }
         
         file_upload = file_upload_dao.create(db, upload_data)

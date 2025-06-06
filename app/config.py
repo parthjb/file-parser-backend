@@ -4,12 +4,14 @@ import os
 
 class Settings(BaseSettings):
     
-    DATABASE_URL: str = "postgresql://postgres:parth@localhost:5432/file_to_db_mapper"
-    
-    OPENAI_API_KEY: str = "api key"
-    GENAI_API_KEY: str = "api key"
+    DATABASE_URL: str
+    OPENAI_API_KEY: str
+    GENAI_API_KEY: str
+    SUPABASE_KEY: str
+    SUPABASE_URL: str
     
     UPLOAD_DIR: str = "uploads"
+    CLOUD_UPLOAD_DIR: str = "cloud_uploads"
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  
     ALLOWED_FILE_TYPES: list = ["pdf", "docx", "csv"]
     ALLOWED_MIME_TYPES: list = [

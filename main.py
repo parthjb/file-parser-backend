@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.utils.logger import setup_logger
 from app.database.connection import engine, Base
-from app.routes import upload_routes
+from app.routes import upload_routes, dashboard_routes
 
 logger = setup_logger()
 
@@ -41,6 +41,7 @@ app.add_middleware(
 )
 
 app.include_router(upload_routes.router, prefix=settings.API_PREFIX)
+app.include_router(dashboard_routes.router, prefix=settings.API_PREFIX)
 
 @app.get("/")
 async def root():
