@@ -7,7 +7,7 @@ from app.utils.logger import app_logger
 from app.database.connection import get_db_session
 from app.schemas.file_schemas import DataInsertResponse, FieldMapping, MappingResult, ProcessingStats, Unmappings
 from app.dao.data_inserting_dao import main as process_llm_mappings  
-
+from app.dao.llm_dao import LLMExtractedDataDAO
 
 class FileProcessingBAO:
     def __init__(self):
@@ -15,9 +15,10 @@ class FileProcessingBAO:
         self.processing_log_dao = ProcessingLogDAO()
         self.llm_mapping_bao = LLMMappingBAO()
         self.file_processor = FileProcessor()
+        self.llm_data_dao = LLMExtractedDataDAO()
         self.expected_schema = {
             'invoice': {
-                'invoice_number': "String(20)",
+                'invoice_number': "String",
                 'issue_date': "Date",
                 'due_date': "Date",
                 'total_amount': "DECIMAL"
@@ -57,8 +58,28 @@ class FileProcessingBAO:
                 self.file_upload_dao.update_processing_status(db, file_upload_id, "Processing")                 
                 self.processing_log_dao.create_log(db, file_upload_id, "INFO", "Started file processing")
                 
-                # if file_upload.file_type == "pdf":
-                #     llm_result = await self.llm_mapping_bao.fetch_and_map_columns_with_llm(file_content)
+                if file_upload.file_type == "pdf" or file_upload.file_type == "docx" or file_upload.file_type == "doc":
+                    extracted_context = await self._extract_columns(file_upload)
+                    llm_result = await self.llm_mapping_bao.fetch_and_map_columns_with_llm(extracted_context)
+                    extra_columns = llm_result["unmapped_fields"]
+                
+                    self.file_upload_dao.add_unmapped_columns(db, file_upload_id, unmapped_columns={
+                        "unmapped_fields": extra_columns
+                    })
+                    
+                    self.llm_data_dao.insert_data(
+                        db,
+                        file_upload_id,
+                        data=llm_result["data"],
+                        extracted_fields=llm_result["extracted_fields"]
+                    )
+                    
+                    mappingss_and_schema = {
+                    "mappings": llm_result["mappings"], 
+                    "expected_schema": self.expected_schema,
+                    "file_upload_id": file_upload_id
+                    }
+                    return mappingss_and_schema
                                 
                 extracted_context = await self._extract_columns(file_upload)
 
@@ -99,11 +120,6 @@ class FileProcessingBAO:
                     db, file_upload_id, "INFO", "Starting database insertion with LLM mappings"
                 )
                 
-                file_upload_obj = self.file_upload_dao.get_by_id(db, file_upload_id)
-                
-                extracted_context = await self._extract_columns(file_upload_obj)
-                file_content = extracted_context["rows"]
-                
                 processed_mappings_list = []
                 for mapping in confirmed_mappings:
                     if hasattr(mapping, 'source_field'):
@@ -118,7 +134,69 @@ class FileProcessingBAO:
                 processed_mappings = {
                     'mappings': processed_mappings_list
                 }
+                print("user mappings:", processed_mappings)
+
+                file_upload = self.file_upload_dao.get_by_id(db, file_upload_id)
                 
+                if file_upload.file_type == "pdf" or file_upload.file_type == "docx" or file_upload.file_type == "doc":
+                    llm_cache = self.llm_data_dao.get_data_by_id(db, file_upload_id)
+                    
+                    processing_stats = process_llm_mappings(
+                    file_content=llm_cache.data,
+                    mappings=processed_mappings,
+                    file_upload_id=file_upload_id,
+                    db_session=db
+                    )
+                    
+                    self.processing_log_dao.create_log(
+                    db, file_upload_id, "INFO", 
+                    f"Database insertion completed. Success: {processing_stats['successful_records']}, "
+                    f"Failed: {processing_stats['failed_records']}"
+                    )
+                    
+                    if processing_stats['failed_records'] == 0:
+                        final_status = "Completed" 
+                    else:
+                        final_status = "Partial success"
+                    self.file_upload_dao.update_processing_status(db, file_upload_id, final_status)
+                
+                
+                    field_mappings = []
+                    for mapping in processed_mappings_list:
+                        field_mapping = FieldMapping(
+                            source_field=mapping['source_field'],
+                            target_table=mapping['target_table'],
+                            target_column=mapping['target_column'],
+                        )
+                        field_mappings.append(field_mapping)
+                    
+                    mapping_result = MappingResult(mappings=field_mappings)
+                    
+                    unmapped_fields = []
+                    unmapped_fields = file_upload.unmapped_columns.get('unmapped_fields', [])
+                    unmapped = Unmappings(unmapped_fields=unmapped_fields)
+
+                    processing_stats_obj = ProcessingStats(
+                        total_records=processing_stats.get('total_records', 0),
+                        successful_records=processing_stats.get('successful_records', 0),
+                        failed_records=processing_stats.get('failed_records', 0),
+                        errors=processing_stats.get('errors', [])
+                    )
+                    
+                    response = DataInsertResponse(
+                        file_upload_id=file_upload_id,
+                        extracted_columns=llm_cache.extracted_fields,
+                        mappings=mapping_result,  
+                        unmapped=unmapped,
+                        processing_stats=processing_stats_obj,
+                        status=final_status
+                    )
+                    
+                    return response
+                    
+                
+                extracted_context = await self._extract_columns(file_upload)
+                file_content = extracted_context["rows"]            
                 
                 processing_stats = process_llm_mappings(
                     file_content=file_content,
@@ -151,7 +229,7 @@ class FileProcessingBAO:
                 mapping_result = MappingResult(mappings=field_mappings)
                 
                 unmapped_fields = []
-                unmapped_fields = file_upload_obj.unmapped_columns.get('unmapped_fields', [])
+                unmapped_fields = file_upload.unmapped_columns.get('unmapped_fields', [])
                 unmapped = Unmappings(unmapped_fields=unmapped_fields)
 
                 processing_stats_obj = ProcessingStats(
@@ -187,18 +265,19 @@ class FileProcessingBAO:
         
     async def _extract_columns(self, file_upload) -> Dict[str, Any]:
         file_path = file_upload.file_path
+        storage_location = file_upload.storage_location
         file_type = file_upload.file_type.lower()
                 
         try:
             if file_type == 'csv':
-                data = self.file_processor.extract_data_from_csv(file_path)
+                data = self.file_processor.extract_data_from_csv(file_path, storage_location)
                 return data
             elif file_type == 'pdf':
-                text = self.file_processor.extract_text_from_pdf(file_path)
-                return self.file_processor.extract_columns_from_text(text)
+                text = self.file_processor.extract_text_from_pdf(file_path, storage_location)
+                return text
             elif file_type in ['docx', 'doc']:
-                text = self.file_processor.extract_text_from_docx(file_path)
-                return self.file_processor.extract_columns_from_text(text)
+                text = self.file_processor.extract_text_from_docx(file_path, storage_location)
+                return text
             else:
                 raise ValueError(f"Unsupported file type: {file_type}")
         except Exception as e:

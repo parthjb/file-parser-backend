@@ -12,6 +12,7 @@ class FileUpload(Base):
     file_path = Column(String(500))
     file_size = Column(BIGINT)
     file_type = Column(String(10), nullable=False)
+    storage_location = Column(String(50), nullable=False)
     upload_timestamp = Column(TIMESTAMP, default=func.current_timestamp())
     processing_status = Column(String(200), default='pending')
     processing_started_at = Column(TIMESTAMP)
@@ -28,8 +29,16 @@ class FileUpload(Base):
     customers = relationship("Customer", back_populates="file_upload")
     payments = relationship("Payment", back_populates="file_upload")
     invoice_items = relationship("InvoiceItem", back_populates="file_upload")
+    llm_data_caches = relationship("LLMDataCache", back_populates="file_upload")
 
-
+class LLMDataCache(Base):
+    __tablename__= "llm_data_cache"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    file_upload_id = Column(Integer, ForeignKey('fileupload.file_upload_id'), nullable=False)
+    data = Column(JSON)
+    extracted_fields = Column(JSON)
+    
+    file_upload = relationship("FileUpload", back_populates="llm_data_caches")
 class ProcessingLog(Base):
     __tablename__ = "processinglog"
 
@@ -47,7 +56,7 @@ class Invoice(Base):
     __tablename__ = "invoice"
 
     invoice_id = Column(Integer, primary_key=True, autoincrement=True)
-    invoice_number = Column(String(20))
+    invoice_number = Column(String)
     issue_date = Column(DATE)
     due_date = Column(DATE)
     total_amount = Column(DECIMAL)
@@ -68,7 +77,7 @@ class Vendor(Base):
     vendor_id = Column(Integer, primary_key=True, autoincrement=True)
     vendor_name = Column(String)
     email = Column(String)
-    phone = Column(String(15))
+    phone = Column(String)
     address = Column(Text)
     file_upload_id = Column(Integer, ForeignKey('fileupload.file_upload_id'), nullable=False)
 
