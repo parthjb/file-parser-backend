@@ -34,7 +34,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://file-parser-frontend-94do.vercel.app"],
+    allow_origins=["http://file-parser-frontend-94do-my0titwxx.vercel.app"],
+    # allow_origins=["http://localhost:3000"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
