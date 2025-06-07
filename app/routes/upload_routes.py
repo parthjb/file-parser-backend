@@ -42,8 +42,10 @@ async def upload_file(file: UploadFile = File(...), storageLocation: Optional[st
         file_processor = FileProcessor()
         if storageLocation == 'local':
             file_path = await file_processor.save_file(content, file.filename)
-        else:
+        elif storageLocation == 'cloud':
             file_path = await file_processor.save_file_to_cloud(content, file.filename)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid storage location specified")
 
         file_upload_dao = FileUploadDAO()
         upload_data = {
