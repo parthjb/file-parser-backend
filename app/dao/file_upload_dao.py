@@ -51,7 +51,6 @@ class FileUploadDAO(BaseDAO[FileUpload]):
             raise
     
     def get_all_with_stats(self, db: Session, skip: int = 0, limit: int = 100) -> List[FileUpload]:
-        """Get all file uploads with processing stats"""
         try:
             return db.query(FileUpload).offset(skip).limit(limit).all()
         except SQLAlchemyError as e:

@@ -3,6 +3,7 @@ from pathlib import Path
 import aiofiles
 from typing import  Dict, Any, List
 import PyPDF2
+import openpyxl
 import pandas as pd
 from docx import Document
 from pathlib import Path
@@ -36,6 +37,19 @@ class FileProcessor:
             return filename
         except Exception as e:
             app_logger.error(f"Error saving file to cloud {filename}: {str(e)}")
+            raise
+
+    def download_file_from_cloud(self, filename: str) -> str:
+        try:
+            response = self.supabase_client.storage.from_('uploaded-files').download(filename)
+            file_content = response
+            file_path = Path(self.cloud_dir) / Path(filename).name
+            with open(file_path, 'wb') as f:
+                f.write(file_content)
+            app_logger.info(f"Downloaded file from cloud: {filename}")
+            return str(file_path)
+        except Exception as e:
+            app_logger.error(f"Error downloading file from cloud {filename}: {str(e)}")
             raise
 
     def extract_text_from_pdf(self, file_path_or_name: str, storage_location: str) -> str:
@@ -84,18 +98,41 @@ class FileProcessor:
             app_logger.error(f"Error extracting data from CSV {file_path_or_name}: {str(e)}")
             raise
     
-    def download_file_from_cloud(self, filename: str) -> str:
+    def extract_data_from_excel(self, file_path_or_name: str, storage_location: str) -> Dict[str, Any]:
         try:
-            response = self.supabase_client.storage.from_('uploaded-files').download(filename)
-            file_content = response
-            file_path = Path(self.cloud_dir) / Path(filename).name
-            with open(file_path, 'wb') as f:
-                f.write(file_content)
-            app_logger.info(f"Downloaded file from cloud: {filename}")
-            return str(file_path)
+            if storage_location == 'cloud':
+                file_path_or_name = self.download_file_from_cloud(file_path_or_name)
+
+            df = pd.read_excel(file_path_or_name)
+            data = {
+                'columns': df.columns.tolist(),
+                'rows': df.to_dict('records'),
+                'total_rows': len(df)
+            }
+            app_logger.info(f"Extracted data from Excel: {file_path_or_name} ({len(df)} rows)")
+            return data
         except Exception as e:
-            app_logger.error(f"Error downloading file from cloud {filename}: {str(e)}")
+            app_logger.error(f"Error extracting data from Excel {file_path_or_name}: {str(e)}")
             raise
+    
+    def extract_data_from_tsv(self, file_path_or_name: str, storage_location: str) -> Dict[str, Any]:
+        try:
+            if storage_location == 'cloud':
+                file_path_or_name = self.download_file_from_cloud(file_path_or_name)
+
+            df = pd.read_csv(file_path_or_name, sep='\t')
+            data = {
+                'columns': df.columns.tolist(),
+                'rows': df.to_dict('records'),
+                'total_rows': len(df)
+            }
+            app_logger.info(f"Extracted data from TSV: {file_path_or_name} ({len(df)} rows)")
+            return data
+        except Exception as e:
+            app_logger.error(f"Error extracting data from TSV {file_path_or_name}: {str(e)}")
+            raise
+    
+
     
     
     

@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, Form
-import magic
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from app.database.connection import get_db
@@ -28,14 +27,6 @@ async def upload_file(file: UploadFile = File(...), storageLocation: Optional[st
             )
         
         content = await file.read()  
-        # mime = magic.Magic(mime=True)
-        # mime_type = mime.from_buffer(content)
-
-        # if mime_type not in settings.ALLOWED_MIME_TYPES:
-        #     raise HTTPException(
-        #         status_code=400,
-        #         detail=f"File type {mime_type} not allowed. Allowed types: {settings.ALLOWED_MIME_TYPES}"
-        #     )
             
         if len(content) > settings.MAX_FILE_SIZE:
             raise HTTPException(status_code=400, detail="File too large")
@@ -43,8 +34,10 @@ async def upload_file(file: UploadFile = File(...), storageLocation: Optional[st
         file_processor = FileProcessor()
         if storageLocation == 'local':
             file_path = await file_processor.save_file(content, file.filename)
-        else:
+        elif storageLocation == 'cloud':
             file_path = await file_processor.save_file_to_cloud(content, file.filename)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid storage location specified")
 
         file_upload_dao = FileUploadDAO()
         upload_data = {

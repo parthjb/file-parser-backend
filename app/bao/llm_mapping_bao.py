@@ -76,6 +76,7 @@ class LLMMappingBAO:
 
             Guidelines:
             - Consider common invoice terminology variations
+            - Give full datatpe names (e.g., "String", "Integer", "DECIMAL")
             - Only return valid JSON, no additional text or explanations
             """
 
@@ -156,6 +157,7 @@ class LLMMappingBAO:
             - Be intelligent and flexible: the text might not be clearly tabular.
             - Use common sense to match fields (e.g., "Inv No" → invoice_number).
             - Extract realistic field values from the text.
+            - Give full datatype names (e.g., "String", "Integer", "DECIMAL")
             - Ensure valid JSON format.
             """
 
@@ -175,11 +177,12 @@ class LLMMappingBAO:
             # app_logger.info(f"Raw LLM response: {response_text}")
             
             if not response_text:
-                app_logger.warning("Empty response from LLM, using fallback mapping")
+                app_logger.warning("Empty response from LLM.")
+                raise ValueError("LLM returned empty response")
 
             result = json.loads(response_text)
             return result
 
         except Exception as e:
             app_logger.error(f"Error in LLM mapping: {str(e)}")
-            return {"message": "LLM is not working"}
+            raise e

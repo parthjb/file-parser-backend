@@ -1,6 +1,4 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
-import os
 
 class Settings(BaseSettings):
     
@@ -13,13 +11,8 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     CLOUD_UPLOAD_DIR: str = "cloud_uploads"
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  
-    ALLOWED_FILE_TYPES: list = ["pdf", "docx", "csv"]
-    ALLOWED_MIME_TYPES: list = [
-    "application/pdf",                              
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  
-    "text/csv"                                      
-    ]
-    
+    ALLOWED_FILE_TYPES: list = ["pdf", "docx", "csv", "tsv", "xlsx", "xls", "doc"]
+
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "app.log"
     

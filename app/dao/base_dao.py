@@ -15,7 +15,7 @@ class BaseDAO(Generic[T]):
             db.add(db_obj)
             db.commit()
             db.refresh(db_obj)
-            app_logger.info(f"Created {self.model.__name__} with ID: {getattr(db_obj, 'id', 'N/A')}")
+            app_logger.info("Files metadata successfully created in the database")
             return db_obj
         except SQLAlchemyError as e:
             app_logger.error(f"Error creating {self.model.__name__}: {str(e)}")

@@ -16,3 +16,4 @@ uploads/*.csv
 .env
 file_parser/Scripts/*.execloud_uploads/
 uploads/
+cloud_uploads/
