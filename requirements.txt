@@ -73,8 +73,6 @@ pytest-mock==3.14.1
 python-dateutil==2.9.0.post0
 python-docx==1.1.0
 python-dotenv==1.0.0
-python-magic==0.4.27
-python-magic-bin==0.4.14
 python-multipart==0.0.6
 pytz==2025.2
 realtime==2.4.3
