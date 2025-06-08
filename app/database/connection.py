@@ -16,7 +16,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db() -> Session:
-    """Dependency to get database session"""
     db = SessionLocal()
     try:
         yield db
@@ -29,7 +28,6 @@ def get_db() -> Session:
 
 @contextmanager
 def get_db_session():
-    """Context manager for database sessions"""
     db = SessionLocal()
     try:
         yield db

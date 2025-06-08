@@ -170,9 +170,6 @@ class LLMMappingProcessor:
             app_logger.error(f"Error logging to database: {e}")
     
     def process_single_record(self, record: Dict[str, Any], mappings: Dict) -> bool:
-        """
-        Process a single record and insert into database with proper foreign key relationships.
-        """
         try:
             transformed_data = self.transform_data_by_mappings(record, mappings)
             vendor_id = self.create_vendor(transformed_data['vendor'])
@@ -193,16 +190,6 @@ class LLMMappingProcessor:
             return False
     
     def process_batch(self, file_content: List[Dict[str, Any]], mappings: Dict) -> Dict[str, int]:
-        """
-        Process a batch of records.
-        
-        Args:
-            file_content: List of records from file
-            mappings: LLM mapping configuration
-            
-        Returns:
-            Processing statistics
-        """
         app_logger.info(f"Starting batch processing of {len(file_content)} records")
         
         self.processing_stats['total_records'] = len(file_content)
@@ -241,7 +228,7 @@ class LLMMappingProcessor:
                 file_upload.successful_records = self.processing_stats['successful_records']
                 file_upload.failed_records = self.processing_stats['failed_records']
                 if self.processing_stats['errors']:
-                    file_upload.error_summary = '; '.join(self.processing_stats['errors'][:5])  # First 5 errors
+                    file_upload.error_summary = '; '.join(self.processing_stats['errors'][:5])
                 
                 self.db_session.commit()
             
@@ -263,19 +250,8 @@ class LLMMappingProcessor:
 
 
 def main(file_content: List[Dict[str, Any]], mappings: Dict, file_upload_id: int, db_session: Session):
-    """
-    Main function to orchestrate the LLM mapping and database insertion process.
-    
-    Args:
-        file_content: List of records from processed file
-        mappings: LLM mapping configuration
-        file_upload_id: ID of the file upload record
-        db_session: Database session
-    """
-    
-    app_logger.info("Starting LLM mapping database integration process")
-    
     try:
+        app_logger.info("Starting LLM mapping database integration process")
         processor = LLMMappingProcessor(db_session, file_upload_id)
         
         stats = processor.process_batch(file_content, mappings)

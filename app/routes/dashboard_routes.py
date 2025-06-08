@@ -10,7 +10,6 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @router.get("/overview")
 async def get_dashboard_overview(db: Session = Depends(get_db)):
-    """Get dashboard overview statistics"""
     try:
         file_upload_dao = FileUploadDAO()
         
@@ -31,8 +30,15 @@ async def get_dashboard_overview(db: Session = Depends(get_db)):
                     'file_upload_id': f.file_upload_id,
                     'filename': f.original_filename,
                     'status': f.processing_status,
-                    'upload_time': f.upload_timestamp,
-                    'records_processed': f.successful_records or 0
+                    'storage_location': f.storage_location,
+                    'records_processed': f.successful_records or 0,
+                    'file_size': f.file_size,
+                    'file_type': f.file_type,
+                    'upload_timestamp': f.upload_timestamp,
+                    'total_records_found': f.total_records_found,
+                    'failed_records': f.failed_records,
+                    'error_summary': f.error_summary,
+                    'unmapped_columns': f.unmapped_columns or [],
                 }
                 for f in recent_uploads
             ]

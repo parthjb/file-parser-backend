@@ -27,14 +27,6 @@ async def upload_file(file: UploadFile = File(...), storageLocation: Optional[st
             )
         
         content = await file.read()  
-        # mime = magic.Magic(mime=True)
-        # mime_type = mime.from_buffer(content)
-
-        # if mime_type not in settings.ALLOWED_MIME_TYPES:
-        #     raise HTTPException(
-        #         status_code=400,
-        #         detail=f"File type {mime_type} not allowed. Allowed types: {settings.ALLOWED_MIME_TYPES}"
-        #     )
             
         if len(content) > settings.MAX_FILE_SIZE:
             raise HTTPException(status_code=400, detail="File too large")

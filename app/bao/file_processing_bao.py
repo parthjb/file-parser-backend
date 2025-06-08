@@ -59,7 +59,7 @@ class FileProcessingBAO:
                 self.processing_log_dao.create_log(db, file_upload_id, "INFO", "Started file processing")
                 
                 if file_upload.file_type == "pdf" or file_upload.file_type == "docx" or file_upload.file_type == "doc":
-                    extracted_context = await self._extract_columns(file_upload)
+                    extracted_context = await self.extract_data(file_upload)
                     llm_result = await self.llm_mapping_bao.fetch_and_map_columns_with_llm(extracted_context)
                     extra_columns = llm_result["unmapped_fields"]
                 
@@ -81,10 +81,13 @@ class FileProcessingBAO:
                     }
                     return mappingss_and_schema
                                 
-                extracted_context = await self._extract_columns(file_upload)
+                extracted_context = await self.extract_data(file_upload)
 
                 extracted_columns = extracted_context["columns"]
-                file_content = extracted_context["rows"]  
+                file_content = extracted_context["rows"][0] 
+                
+                if not file_content:
+                    raise ValueError("No content extracted from the file") 
                 
                 llm_result = await self.llm_mapping_bao.map_columns_with_llm(extracted_columns, file_content)
                 if not llm_result:
@@ -134,7 +137,6 @@ class FileProcessingBAO:
                 processed_mappings = {
                     'mappings': processed_mappings_list
                 }
-                print("user mappings:", processed_mappings)
 
                 file_upload = self.file_upload_dao.get_by_id(db, file_upload_id)
                 
@@ -195,7 +197,7 @@ class FileProcessingBAO:
                     return response
                     
                 
-                extracted_context = await self._extract_columns(file_upload)
+                extracted_context = await self.extract_data(file_upload)
                 file_content = extracted_context["rows"]            
                 
                 processing_stats = process_llm_mappings(
@@ -263,7 +265,7 @@ class FileProcessingBAO:
             raise e
 
         
-    async def _extract_columns(self, file_upload) -> Dict[str, Any]:
+    async def extract_data(self, file_upload) -> Dict[str, Any]:
         file_path = file_upload.file_path
         storage_location = file_upload.storage_location
         file_type = file_upload.file_type.lower()
@@ -271,6 +273,12 @@ class FileProcessingBAO:
         try:
             if file_type == 'csv':
                 data = self.file_processor.extract_data_from_csv(file_path, storage_location)
+                return data
+            elif file_type in ['xlsx', 'xls']:
+                data = self.file_processor.extract_data_from_excel(file_path, storage_location)
+                return data
+            elif file_type == 'tsv':
+                data = self.file_processor.extract_data_from_tsv(file_path, storage_location)
                 return data
             elif file_type == 'pdf':
                 text = self.file_processor.extract_text_from_pdf(file_path, storage_location)
